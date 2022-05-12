@@ -6,7 +6,7 @@ CC ?= gcc
 buildtype ?= release
 
 CPPFLAGS += -Wfatal-errors
-CPPFLAGS += -I .
+CPPFLAGS += -I ./src
 CPPFLAGS += -I ./vendor/liburing-liburing-2.1/src/include/
 
 CXXFLAGS += -Wall -Wextra -Werror
