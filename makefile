@@ -7,7 +7,7 @@ buildtype ?= release
 
 CPPFLAGS += -Wfatal-errors
 CPPFLAGS += -I ./src
-CPPFLAGS += -I ./vendor/liburing-liburing-2.1/src/include/
+# CPPFLAGS += -I ./vendor/liburing-liburing-2.1/src/include/
 
 CXXFLAGS += -Wall -Wextra -Werror
 CXXFLAGS += -std=c++2a
@@ -30,8 +30,12 @@ CXXFLAGS += -Wno-unused-function
 CXXFLAGS += -Wno-unused-parameter
 endif
 
-LDLIBS += -L ./vendor/liburing-liburing-2.1/src
-LDLIBS += -luring
+# LDLIBS += -L ./vendor/liburing-liburing-2.1/src
+# LDLIBS += -luring
+LDLIBS += -lrt
+LDLIBS += -lpthread
+
+LDLIBS += -lstdc++
 
 on_error ?= do_nothing
 
@@ -45,7 +49,6 @@ endif
 
 buildprefix ?= build/cc-$(CC)/$(buildtype)
 
-LDLIBS += -lstdc++
 
 all: $(buildprefix)/pool
 
@@ -65,7 +68,8 @@ run: $(buildprefix)/pool
 	$< $(ARGS)
 
 valrun: $(buildprefix)/pool
-	valgrind --gen-suppressions=yes --suppressions=./stl-val.supp --track-origins=yes --keep-debuginfo=yes $< $(ARGS)
+	# valgrind --gen-suppressions=yes --suppressions=./stl-val.supp --track-origins=yes --keep-debuginfo=yes $< $(ARGS)
+	valgrind --suppressions=./stl-val.supp --track-origins=yes --keep-debuginfo=yes $< $(ARGS)
 
 $(buildprefix)/pool: $(patsubst %.cpp,$(buildprefix)/%.o,$(srcs))
 	@ echo "linking $@"
@@ -75,13 +79,13 @@ $(buildprefix)/%.o $(buildprefix)/%.d: %.cpp | $(buildprefix)/%/
 	@ echo "compiling $<"
 	@ $(CC) -c $(CPPFLAGS) $(CXXFLAGS) $< -MD -o $(buildprefix)/$*.o $(ON_ERROR)
 
-https//%: | https/
-	@ mkdir -p "$(@D)"
-	wget --no-use-server-timestamps -O "$@" https://$*
+# https//%: | https/
+# 	@ mkdir -p "$(@D)"
+# 	wget --no-use-server-timestamps -O "$@" https://$*
 
-fetch: https//github.com/axboe/liburing/archive/refs/tags/liburing-2.1.zip | vendor/
-	unzip -o -qq $< -d $|
-	make -C $|/liburing-liburing-2.1 -j8
+# fetch: https//github.com/axboe/liburing/archive/refs/tags/liburing-2.1.zip | vendor/
+# 	unzip -o -qq $< -d $|
+# 	make -C $|/liburing-liburing-2.1 -j8
 
 format:
 	find -name '*.cpp' -o -name '*.hpp' | xargs -d \\n clang-format -i --verbose

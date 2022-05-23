@@ -1,15 +1,19 @@
 #pragma once
 
-#include "../pqueue/pqueue.hpp"
 #include "macro.hpp"
+#include "pqueue/pqueue.hpp"
+#include "utils.hpp"
 
 #include <concepts>
 #include <coroutine>
 #include <functional>
-#include <liburing.h>
+#include <future>
 #include <variant>
 
 namespace pool {
+
+enum task_status { ts_WORKING, ts_SUCCESS, ts_FAILED };
+
 enum task_tag { t_PRIO_CTX, t_PRIO_INT, t_PRIO_INT_INT };
 class task {
   private:
@@ -19,7 +23,29 @@ class task {
 	};
 
   public:
-	using less = _less<task>;
+	template<typename CoRet> struct promise_type {
+		using coro_handle = std::coroutine_handle<promise_type<CoRet>>;
+
+		coro_handle hndl;
+		CoRet promise_value;
+
+		promise_type() {}
+		promise_type(coro_handle hndl) : hndl(hndl) {}
+
+		promise_type<CoRet> get_return_object() {
+			return promise_type<CoRet>(coro_handle::from_promise(*this));
+		}
+		std::suspend_never initial_suspend() noexcept { return {}; }
+		// We MUST return `std::suspend_always` here so that we can use the `co_return` value,
+		// otherwise we segfault because the coroutine has be destroyed (I think?)
+		std::suspend_always final_suspend() noexcept { return {}; }
+		void return_value(CoRet res) { this->promise_value = res; }
+		void unhandled_exception() { panic_with_trace("error: task crashed"); }
+
+		operator std::coroutine_handle<promise_type<CoRet>>() const { return this->hndl; }
+	};
+
+	using less = _less<std::unique_ptr<task>>;
 	using prio_ctx_ptr = std::shared_ptr<pqueue<task, less>>;
 
   private:
@@ -28,9 +54,9 @@ class task {
 	task_tag tag;
 	// clang-format off
 	std::variant<
-		std::function<bool(prio_ctx_ptr)>,
-		std::function<bool(prio_ctx_ptr, int)>,
-		std::function<bool(prio_ctx_ptr, int, int)>
+		std::function<promise_type<bool>(prio_ctx_ptr)>,
+		std::function<promise_type<bool>(prio_ctx_ptr, int)>,
+		std::function<promise_type<bool>(prio_ctx_ptr, int, int)>
 	> variant_func;
 	// clang-format on
 
@@ -41,29 +67,35 @@ class task {
 	// storage on `prio_queue` initialization.
 	task() = delete;
 
-	task(int32_t prio, std::function<bool(prio_ctx_ptr)> func) :
+	task(int32_t prio, std::function<promise_type<bool>(prio_ctx_ptr)> func) :
 		prio(prio),
 		tag(t_PRIO_CTX),
 		variant_func(func) {}
 
-	task(int32_t prio, std::function<bool(prio_ctx_ptr, int)> func) :
+	task(int32_t prio, std::function<promise_type<bool>(prio_ctx_ptr, int)> func) :
 		prio(prio),
 		tag(t_PRIO_INT),
 		variant_func(func) {}
 
-	bool call(prio_ctx_ptr queue_ptr) {
+	constexpr int32_t priority() const& { return this->prio; }
+
+	promise_type<bool> call(prio_ctx_ptr queue_ptr) {
+		std::cout << "tag: " << this->tag << "\n";
 		switch (this->tag) {
 			case t_PRIO_CTX:
 				return std::get<0>(this->variant_func)(queue_ptr);
 			default:
-				return false;
+				panic_with_trace("unreachable case in `task::call`");
 		}
 	}
 
-	friend constexpr bool operator<(const task& a, const task& b) { return a.prio < b.prio; }
-	friend constexpr bool operator>(const task& a, const task& b) { return b < a; }
-	friend constexpr bool operator<=(const task& a, const task& b) { return !(a > b); }
-	friend constexpr bool operator>=(const task& a, const task& b) { return !(a < b); }
+	using task_ptr = std::unique_ptr<task>;
+	friend bool operator<(const task_ptr& a, const task_ptr& b) {
+		return a->priority() < b->priority();
+	}
+	friend bool operator>(const task_ptr& a, const task_ptr& b) { return b < a; }
+	friend bool operator<=(const task_ptr& a, const task_ptr& b) { return !(a > b); }
+	friend bool operator>=(const task_ptr& a, const task_ptr& b) { return !(a < b); }
 };
 
 }  // namespace pool

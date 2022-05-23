@@ -1,37 +1,47 @@
 #pragma once
 
 #include "macro.hpp"
-
 #include "pqueue/pqueue.hpp"
 #include "task/task.hpp"
 
 #include <concepts>
 #include <coroutine>
 #include <iostream>
-#include <liburing.h>
 #include <memory>
+#include <thread>
+#include <tuple>
 
 namespace pool {
 
 class tpool {
-	public:
+  public:
 	using prio_queue = pqueue<task, task::less>;
 
-	private:
-	size_t num_threads;
+  private:
+	size_t thread_count;
+	size_t free_thread = 0;
+	std::vector<std::tuple<task_status, std::shared_ptr<std::thread>>> threads;
 	std::shared_ptr<prio_queue> queue;
 
-
   public:
+	// Create a thread pool of `threads` number of threads and the given priority queue.
+	tpool(size_t threads, std::shared_ptr<prio_queue> q) : thread_count(threads), queue(q) {}
+	tpool(std::shared_ptr<prio_queue> q) :
+		thread_count(std::thread::hardware_concurrency()),
+		queue(q) {}
+
 	tpool(tpool& other) = delete;
-	tpool(tpool&& other) = delete;
-	tpool(size_t nt, std::shared_ptr<prio_queue> q) : num_threads(nt), queue(q) {}
-	~tpool() {
-		queue.~shared_ptr();
-	}
+	// Keep move constructor
+	tpool(tpool&& other) :
+		thread_count(other.thread_count),
+		threads(std::move(other.threads)),
+		queue(std::move(other.queue)) {}
 
-	bool run_task();
+	~tpool() { queue.~shared_ptr(); }
 
+	// std::optional<std::shared_ptr<std::thread>> set_task(task::task_ptr);
+
+	void run_tasks();
 };
 
 }  // namespace pool
