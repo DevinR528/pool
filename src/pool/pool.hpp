@@ -20,7 +20,7 @@ class tpool {
   private:
 	size_t thread_count;
 	size_t free_thread = 0;
-	std::vector<std::tuple<task_status, std::shared_ptr<std::thread>>> threads;
+	std::vector<std::tuple<task_status, std::thread>> threads;
 	std::shared_ptr<prio_queue> queue;
 
   public:
@@ -37,11 +37,33 @@ class tpool {
 		threads(std::move(other.threads)),
 		queue(std::move(other.queue)) {}
 
-	~tpool() { queue.~shared_ptr(); }
+	~tpool() {
+		for (auto&& [status, thread] : this->threads) {
+			switch (status) {
+				case ts_SUCCESS: {
+					std::cout << "yay we made it!!!!" << std::endl;
+					break;
+				}
+				case ts_FAILED: {
+					std::cout << "ERROR: task failed" << std::endl;
+					break;
+				}
+				case ts_WORKING: {
+					std::cout << "Still working..." << std::endl;
+					break;
+				}
+				default:
+					panic_with_trace("unreachable task_status switch");
+			}
+			thread.join();
+		}
 
-	// std::optional<std::shared_ptr<std::thread>> set_task(task::task_ptr);
+		queue.~shared_ptr();
+	}
 
 	void run_tasks();
+
+	void spawn_tasks();
 };
 
 }  // namespace pool

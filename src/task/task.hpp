@@ -50,7 +50,7 @@ class task {
 
   private:
 	int32_t prio;
-
+	bool sentinal_end = false;
 	task_tag tag;
 	// clang-format off
 	std::variant<
@@ -67,17 +67,20 @@ class task {
 	// storage on `prio_queue` initialization.
 	task() = delete;
 
-	task(int32_t prio, std::function<promise_type<bool>(prio_ctx_ptr)> func) :
+	explicit task(bool end) : sentinal_end(end) {}
+
+	explicit task(int32_t prio, std::function<promise_type<bool>(prio_ctx_ptr)> func) :
 		prio(prio),
 		tag(t_PRIO_CTX),
 		variant_func(func) {}
 
-	task(int32_t prio, std::function<promise_type<bool>(prio_ctx_ptr, int)> func) :
+	explicit task(int32_t prio, std::function<promise_type<bool>(prio_ctx_ptr, int)> func) :
 		prio(prio),
 		tag(t_PRIO_INT),
 		variant_func(func) {}
 
 	constexpr int32_t priority() const& { return this->prio; }
+	constexpr bool is_done() const& { return this->sentinal_end; }
 
 	promise_type<bool> call(prio_ctx_ptr queue_ptr) {
 		std::cout << "tag: " << this->tag << "\n";

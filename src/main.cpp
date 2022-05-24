@@ -82,8 +82,12 @@ int main(int argc, char const* argv[]) {
 
 		queue->push(pool::task(0, file_name));
 		queue->push(pool::task(2, aio_file_read));
+		queue->push(pool::task(true));
 
-		auto threads = thread_pool.run_tasks();
+		// IMPORTANT:
+		// __MUST__ push a task created with `pool::task(true)` as a signal to the thread it's done
+		// working!
+		thread_pool.spawn_tasks();
 
 	} else {
 		std::cout << "error: must pass one argument\n";
