@@ -37,7 +37,7 @@ class task {
 		}
 		std::suspend_never initial_suspend() noexcept { return {}; }
 		// We MUST return `std::suspend_always` here so that we can use the `co_return` value,
-		// otherwise we segfault because the coroutine has be destroyed (I think?)
+		// otherwise we segfault because the coroutine has been destroyed (I think?)
 		std::suspend_always final_suspend() noexcept { return {}; }
 		void return_value(CoRet res) { this->promise_value = res; }
 		void unhandled_exception() { panic_with_trace("error: task crashed"); }

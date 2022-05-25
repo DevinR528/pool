@@ -24,11 +24,13 @@ void tpool::run_tasks() {
 
 	task_status done = ts_WORKING;
 	while(true) {
-		auto opt_task = this->queue->pop();
+		std::optional<task::task_ptr> opt_task;
 		// We are waiting for work
-		if (!opt_task.has_value()) { std::this_thread::yield(); }
+		while (!(opt_task = this->queue->pop()).has_value()) {
+			std::this_thread::yield();
+		}
 		// We have finished everything and now this thread can exit
-		else if (opt_task.value()->is_done()) { return; }
+		if (opt_task.value()->is_done()) { return; }
 
 		auto task = std::move(opt_task.value());
 		// Get the promise (an async value that will resolve sometime in the future)
@@ -48,7 +50,7 @@ void tpool::run_tasks() {
 
 		done = res ? ts_SUCCESS : ts_FAILED;
 
-		std::cout << "HERE " << (done == ts_SUCCESS ? "true" : "false") << std::endl;
+		std::cout << "Task done:  " << (done == ts_SUCCESS ? "true" : "false") << std::endl;
 	}
 }
 

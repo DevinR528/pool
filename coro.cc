@@ -210,16 +210,10 @@ Generator<unsigned> counter6() {
 		co_yield i++;
 }
 
-std::suspend_never foobar(Generator<unsigned> thing) {
-	auto x = co_await counter6();
-	co_return {};
-}
-
 void main6() {
 	auto gen = counter6();
-	foobar(gen);
-	// while (gen)
-	// 	std::cout << "counter6: " << gen() << std::endl;
+	while (gen)
+		std::cout << "counter6: " << gen() << std::endl;
 }
 
 int main() {

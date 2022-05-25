@@ -27,6 +27,8 @@ pool::task::promise_type<bool>
 func_pointer(std::shared_ptr<pool::pqueue<pool::task, pool::task::less>> que) {
 	std::cout << "SUCCESS: "
 			  << "hello from old function" << std::endl;
+
+	que->push(pool::task(true));
 	co_return true;
 }
 
@@ -55,7 +57,6 @@ int main(int argc, char const* argv[]) {
 
 			int status = aio_error(&info);
 			while (status == EINPROGRESS) {
-				co_yield info.aio_buf[curr..curr + info.aio_nbytes]
 				co_await std::suspend_always{};	 // let other threads make progress
 				status = aio_error(&info);
 			}
@@ -69,6 +70,7 @@ int main(int argc, char const* argv[]) {
 			}
 
 			std::cout << "SUCCESS: " << (char*)info.aio_buf << "\n";
+			que->push(pool::task(true));
 
 			co_return true;
 		};
@@ -77,8 +79,9 @@ int main(int argc, char const* argv[]) {
 			std::cout << "SUCCESS: " << argv[1] << "\n";
 
 			que->push(pool::task(1, func_pointer));
+			que->push(pool::task(true));
 
-			return pool::task::promise_type<bool>(true);
+			co_return true;
 		};
 
 		queue->push(pool::task(0, file_name));
