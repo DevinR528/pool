@@ -14,7 +14,7 @@ namespace pool {
 void tpool::spawn_tasks() {
 	this->threads.reserve(this->thread_count);
 	for (size_t i = 0; i < this->thread_count; ++i)
-		this->threads.emplace_back(std::make_tuple(ts_WORKING, std::bind(&tpool::run_tasks, this)));
+		this->threads.emplace_back(std::make_tuple(ts_WORKING, std::thread(std::bind(&tpool::run_tasks, this))));
 }
 
 // `tpool::set_task` returns `optional::none` if there are no threads left in the thread pool, it
@@ -37,6 +37,7 @@ void tpool::run_tasks() {
 		// Make progress on resolving the value while we have not done so
 		while (!prom.done()) {
 			prom();
+			// TODO: save this prom with an id and pop a new task
 			std::this_thread::yield();
 		}
 
@@ -47,7 +48,7 @@ void tpool::run_tasks() {
 
 		done = res ? ts_SUCCESS : ts_FAILED;
 
-	std::cout << "HERE " << (done == ts_SUCCESS ? "true" : "false") << std::endl;
+		std::cout << "HERE " << (done == ts_SUCCESS ? "true" : "false") << std::endl;
 	}
 }
 

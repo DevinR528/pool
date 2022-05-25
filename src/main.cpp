@@ -55,6 +55,7 @@ int main(int argc, char const* argv[]) {
 
 			int status = aio_error(&info);
 			while (status == EINPROGRESS) {
+				co_yield info.aio_buf[curr..curr + info.aio_nbytes]
 				co_await std::suspend_always{};	 // let other threads make progress
 				status = aio_error(&info);
 			}
@@ -77,7 +78,7 @@ int main(int argc, char const* argv[]) {
 
 			que->push(pool::task(1, func_pointer));
 
-			co_return true;
+			return pool::task::promise_type<bool>(true);
 		};
 
 		queue->push(pool::task(0, file_name));
