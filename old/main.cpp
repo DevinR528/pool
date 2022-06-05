@@ -1,7 +1,3 @@
-#include "pool/pool.hpp"
-#include "pqueue/pqueue.hpp"
-#include "task/task.hpp"
-#include "utils.hpp"
 
 #include <aio.h>
 #include <iostream>
@@ -10,18 +6,14 @@
 #include <string>
 #include <unistd.h>
 
-void segv_backtrace(int sig) {
-	void* array[10];
-	size_t size;
+#include "cmdln/process.h"
+#include "cmdln/free.h"
 
-	// get void*'s for all entries on the stack
-	size = backtrace(array, 10);
-
-	// print out all the frames to stderr
-	fprintf(stderr, "Error: signal %d:\n", sig);
-	backtrace_symbols_fd(array, size, STDERR_FILENO);
-	exit(1);
-}
+#include "pool/pool.hpp"
+#include "pqueue/pqueue.hpp"
+#include "task/task.hpp"
+#include "utils.hpp"
+#include "misc/segv_backtrace.hpp"
 
 pool::task::promise_type<bool>
 func_pointer(std::shared_ptr<pool::pqueue<pool::task, pool::task::less>> que) {
@@ -33,18 +25,26 @@ func_pointer(std::shared_ptr<pool::pqueue<pool::task, pool::task::less>> que) {
 }
 
 int main(int argc, char const* argv[]) {
+	#ifdef DEBUGGING
 	signal(SIGSEGV, segv_backtrace);
-
-	using prio_queue = pool::pqueue<pool::task, pool::task::less>;
-
-	auto queue = std::make_shared<prio_queue>(prio_queue());
-	pool::tpool thread_pool = pool::tpool(4, queue);
-
-	if (argc == 2) {
+	#endif
+	
+	struct cmdln* flags = NULL;
+	
+	error = cmdln_process(&flags, argc, argv);
+	
+	if (!error)
+	{
+		using prio_queue = pool::pqueue<pool::task, pool::task::less>;
+		
+		auto queue = std::make_shared<prio_queue>(prio_queue());
+		
+		pool::tpool thread_pool = pool::tpool(flags->number_of_threads, queue);
+		
 		auto aio_file_read =
 			[&](std::shared_ptr<prio_queue> que) -> pool::task::promise_type<bool> {
 			char* buff[128] = {};
-			FILE* fd = fopen(argv[1], "r");
+			FILE* fd = fopen(flags->input_path, "r");
 			if (fd == nullptr) { std::cout << "error: invalid file `" << argv[1] << "`\n"; }
 			aiocb info = {};
 			info.aio_fildes = fileno(fd);
@@ -54,13 +54,13 @@ int main(int argc, char const* argv[]) {
 			info.aio_offset = 0;
 			info.aio_sigevent.sigev_notify = SIGEV_SIGNAL;
 			aio_read(&info);
-
+			
 			int status = aio_error(&info);
 			while (status == EINPROGRESS) {
 				co_await std::suspend_always{};	 // let other threads make progress
 				status = aio_error(&info);
 			}
-
+			
 			if (status == ECANCELED) {
 				std::cout << "CANCELED in aio read" << std::endl;
 				co_return false;
@@ -92,11 +92,22 @@ int main(int argc, char const* argv[]) {
 		// __MUST__ push a task created with `pool::task(true)` as a signal to the thread it's done
 		// working!
 		thread_pool.spawn_tasks();
-
-	} else {
-		std::cout << "error: must pass one argument\n";
-		return 1;
+		
 	}
-
+	
+	free_cmdln(flags);
+	
 	return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+

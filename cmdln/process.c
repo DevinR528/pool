@@ -87,11 +87,13 @@ int cmdln_process(struct cmdln** out, int argc, char* argv[])
 	
 	struct cmdln* flags = NULL;
 	
-	if (!error)
-		error = smalloc((void**) &flags, sizeof(*flags));
+/*	if (!error)*/
+/*		error = smalloc((void**) &flags, sizeof(*flags));*/
 	
 	if (!error)
-	{
+	{	
+		flags = new struct cmdln();
+		
 		flags->input_path = input_path;
 		flags->number_of_threads = number_of_threads;
 		
