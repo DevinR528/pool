@@ -9,15 +9,33 @@ int nain(int argc, char const* argv[])
 	
 	struct pqueue* pqueue = new pqueue();
 	
+	struct aio_scheduler* aio = new aio_scheduler(pqueue);
+		// schedule_write(fd, buffer, size, task):
+			// submits write(fd, buffer, size) request
+			// on the event of a release:
+				// submit task into pqueue
+	
+	struct dep_scheduler* dep = new dep_scheduler(pqueue);
+		// dict: dependency -> tasks[]
+		
+		// schedule(dependencies[], task);
+			// data-structure entry
+		
+		// release(dependency);
+			// might add tasks to pqueue
+	
+	struct scope* scope = new scope();
+	
 	struct tpool* tpool = new tpool(pqueue, flags->number_of_threads);
 	
+	pqueue->submit(new parse_task(flags->input_path));
 	
+	tpool->join();
+	
+	scope->printout();
 	
 	return error;
 }
-
-
-
 
 
 int main(int argc, char const* argv[]) {
@@ -31,6 +49,13 @@ int main(int argc, char const* argv[]) {
 		std::cout << "Allocation failed: " << e.what() << '\n';
 	}
 }
+
+
+
+
+
+
+
 
 
 
