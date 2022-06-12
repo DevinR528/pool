@@ -1,6 +1,8 @@
+#include "class.hpp"
+#include "kind.hpp"
 
-task::task(enum task_kind kind)
-{
-	this->kind = kind;
-}
+namespace pool {
 
+task::task(task_kind kind) : color(compute_color((double)kind / (double)task_kind::tk_count)) {}
+
+}  // namespace pool

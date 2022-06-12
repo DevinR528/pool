@@ -1,1 +1,1 @@
-void segv_backtrace(int sig);
+[[noreturn]] void segv_backtrace(int sig);

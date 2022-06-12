@@ -2,18 +2,13 @@
 
 #include <string>
 
-#include "kind.hpp"
+#include "../class.hpp"
+#include "../kind.hpp"
 
 namespace pool {
-class task {
+class parse_task: public task {
   public:
-	task_kind kind;
-	std::string color;
-
-	task() = delete;
-	task(enum task_kind kind);
-
-	static std::string compute_color(double hue);
+	parse_task(std::string_view path) : task(task_kind::tk_parse) {}
 
 	int compare(const struct task*, const struct task*);
 

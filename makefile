@@ -58,7 +58,7 @@ all: $(buildprefix)/pool
 	@ mkdir -p $@
 
 build/srclist.mk: | build/
-	find -name '*.cpp' ! -path '*/junk/*' | sed 's/^/srcs += /' > $@
+	find -name '*.cpp' ! -path '*/old/*' | sed 's/^/srcs += /' > $@
 
 include build/srclist.mk
 
