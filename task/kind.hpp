@@ -7,7 +7,7 @@ enum task_kind {
 
 	tk_typecheck,
 
-	tk_compile,
+	tk_lower,
 
 	tk_optimization,
 
@@ -15,5 +15,13 @@ enum task_kind {
 
 	tk_count,  // add above
 };
+
+#ifdef DEBUGGING
+
+static const char* TASK_KIND_NAMES[] = {
+	"PARSE", "TYPECHECK", "LOWER", "OPTIMIZATION", "LINK",
+};
+
+#endif
 
 }  // namespace pool

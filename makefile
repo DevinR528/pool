@@ -34,6 +34,7 @@ endif
 # LDLIBS += -luring
 LDLIBS += -lrt
 LDLIBS += -lpthread
+LDLIBS += -lm
 
 LDLIBS += -lstdc++
 

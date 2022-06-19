@@ -3,9 +3,11 @@
 
 #include <execinfo.h>
 #include <stddef.h>
-#include <unistd.h>
 #include <stdio.h>
 #include <string>
+#include <unistd.h>
+
+namespace pool {
 
 [[noreturn]] void segv_backtrace(int sig) {
 	void* array[10];
@@ -19,3 +21,5 @@
 	backtrace_symbols_fd(array, size, STDERR_FILENO);
 	exit(1);
 }
+
+}  // namespace pool

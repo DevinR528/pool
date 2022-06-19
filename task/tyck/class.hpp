@@ -6,14 +6,13 @@
 #include "../kind.hpp"
 
 namespace pool {
-class parse_task: public task {
-	std::string_view path;
+class tyck_task: public task {
   public:
-	parse_task(std::string_view path);
+	tyck_task();
 
 	int process() override;
 
-	~parse_task() override;
+	~tyck_task() override;
 };
 
 }  // namespace pool

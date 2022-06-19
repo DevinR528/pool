@@ -1,69 +1,73 @@
-#include <new>
+#include <csignal>
+#include <iostream>
 
-// #include "cmdln/struct.h"
+#include "misc/segv_backtrace.hpp"
+#include "task/class.hpp"
+#include "task/parse/class.hpp"
+#include "task/tyck/class.hpp"
+#include "tpool/class.hpp"
 // #include ""
 // #include ""
 
+void take_a_task(pool::parse_task t) { t.print(); }
 
-// int nain(int argc, char const* argv[])
-// {
-// 	int error = 0;
+int nain(int argc, char const* argv[]) {
+	int error = 0;
 
-// 	struct cmdln* flags = cmdln(argc, argv);
+	std::unique_ptr<pool::parse_task> pt =
+		std::make_unique<pool::parse_task>(pool::parse_task(argv[1]));
 
-// 	struct pqueue* pqueue = new pqueue();
+	std::unique_ptr<pool::tyck_task> tt =
+		std::make_unique<pool::tyck_task>(pool::tyck_task());
 
-// 	struct aio_scheduler* aio = new aio_scheduler(pqueue);
-// 		// schedule_write(fd, buffer, size, task):
-// 			// submits write(fd, buffer, size) request
-// 			// on the event of a release:
-// 				// submit task into pqueue
+	std::vector<std::unique_ptr<pool::task>> pqueue;
 
-// 	struct dep_scheduler* dep = new dep_scheduler(pqueue);
-// 		// dict: dependency -> tasks[]
+	pqueue.push_back(std::move(pt));
+	pqueue.push_back(std::move(tt));
 
-// 		// schedule(dependencies[], task);
-// 			// data-structure entry
+	pool::thread_pool tpool = pool::thread_pool(std::move(pqueue), 2);
+	tpool.join();
 
-// 		// release(dependency);
-// 			// might add tasks to pqueue
+	// 	struct cmdln* flags = cmdln(argc, argv);
 
-// 	struct scope* scope = new scope();
+	// 	struct pqueue* pqueue = new pqueue();
 
-// 	struct tpool* tpool = new tpool(pqueue, flags->number_of_threads);
+	// 	struct aio_scheduler* aio = new aio_scheduler(pqueue);
+	// 		// schedule_write(fd, buffer, size, task):
+	// 			// submits write(fd, buffer, size) request
+	// 			// on the event of a release:
+	// 				// submit task into pqueue
 
-// 	pqueue->submit(new parse_task(flags->input_path));
+	// 	struct dep_scheduler* dep = new dep_scheduler(pqueue);
+	// 		// dict: dependency -> tasks[]
 
-// 	tpool->join();
+	// 		// schedule(dependencies[], task);
+	// 			// data-structure entry
 
-// 	scope->printout();
+	// 		// release(dependency);
+	// 			// might add tasks to pqueue
 
-// 	return error;
-// }
+	// 	struct scope* scope = new scope();
 
+	// 	struct tpool* tpool = new tpool(pqueue, flags->number_of_threads);
 
-int main(int argc, char const* argv[]) {
-	#ifdef DEBUGGING
-	signal(SIGSEGV, segv_backtrace);
-	#endif
+	// 	pqueue->submit(new parse_task(flags->input_path));
 
-	// try {
-	// 	return nain(argc, argv);
-	// } catch (const std::bad_alloc& e) {
-	// 	std::cout << "Allocation failed: " << e.what() << '\n';
-	// }
-	char* x = {};
-	char* y = new(x) char;
-	return y != 0 && argv != 0 && argc != 0;
+	// 	tpool->join();
+
+	// 	scope->printout();
+
+	return argc > 0 ? error : 0;
 }
 
+int main(int argc, char const* argv[]) {
+#ifdef DEBUGGING
+	signal(SIGSEGV, pool::segv_backtrace);
+#endif
 
+	try {
+		return nain(argc, argv);
+	} catch (const std::bad_alloc& e) { std::cout << "Allocation failed: " << e.what() << '\n'; }
 
-
-
-
-
-
-
-
-
+	return 0;
+}

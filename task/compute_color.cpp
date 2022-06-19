@@ -1,6 +1,6 @@
 #include "class.hpp"
 
-#include <math.h>
+#include <cmath>
 #include <string>
 
 namespace pool {
