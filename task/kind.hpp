@@ -3,7 +3,7 @@
 namespace pool {
 
 enum task_kind {
-	tk_parse,
+	tk_parse = 0,
 
 	tk_typecheck,
 
@@ -19,7 +19,11 @@ enum task_kind {
 #ifdef DEBUGGING
 
 static const char* TASK_KIND_NAMES[] = {
-	"PARSE", "TYPECHECK", "LOWER", "OPTIMIZATION", "LINK",
+	"PARSE",
+	"TYPECHECK",
+	"LOWER",
+	"OPTIMIZATION",
+	"LINK",
 };
 
 #endif

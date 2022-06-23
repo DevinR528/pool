@@ -5,10 +5,8 @@
 
 namespace pool {
 
-int task::compare(const task& a, const task& b) {
-	return a.color < b.color
-		? -1 : a.color == b.color
-		? 0 : 1;
+int task::compare(const task& b) const& {
+	return this->kind < b.kind ? -1 : this->kind == b.kind ? 0 : 1;
 }
 
 }  // namespace pool

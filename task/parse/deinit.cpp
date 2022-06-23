@@ -1,7 +1,7 @@
 #include <string>
 
-#include "class.hpp"
 #include "../kind.hpp"
+#include "class.hpp"
 
 namespace pool {
 

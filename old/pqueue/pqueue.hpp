@@ -1,7 +1,5 @@
 #pragma once
 
-#include "utils.hpp"
-
 #include <algorithm>
 #include <atomic>
 #include <concepts>
@@ -11,6 +9,8 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+
+#include "utils.hpp"
 
 namespace pool {
 
@@ -25,7 +25,7 @@ template<typename T, typename Compare = std::less<T>> class pqueue {
 
   public:
 	pqueue() : cmp(Compare()) {}
-	explicit pqueue(Compare cmp) : cmp(cmp) { }
+	explicit pqueue(Compare cmp) : cmp(cmp) {}
 
 	// No copying of this, we can't lose our atomic syncs
 	pqueue(pqueue<T, Compare>& queue) = delete;

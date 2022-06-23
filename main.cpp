@@ -17,13 +17,21 @@ int nain(int argc, char const* argv[]) {
 	std::unique_ptr<pool::parse_task> pt =
 		std::make_unique<pool::parse_task>(pool::parse_task(argv[1]));
 
-	std::unique_ptr<pool::tyck_task> tt =
-		std::make_unique<pool::tyck_task>(pool::tyck_task());
+	std::unique_ptr<pool::tyck_task> tt = std::make_unique<pool::tyck_task>(pool::tyck_task());
 
 	std::vector<std::unique_ptr<pool::task>> pqueue;
 
 	pqueue.push_back(std::move(pt));
 	pqueue.push_back(std::move(tt));
+
+	std::sort(
+		pqueue.begin(),
+		pqueue.end(),
+		[](const std::unique_ptr<pool::task>& a, const std::unique_ptr<pool::task>& b) {
+			std::cout << a->kind << " " << b->kind << std::endl;
+			// Sort it backwards since the vector only has pop_back
+			return a->compare(*b.get()) > 0;
+		});
 
 	pool::thread_pool tpool = pool::thread_pool(std::move(pqueue), 2);
 	tpool.join();

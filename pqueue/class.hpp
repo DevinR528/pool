@@ -1,7 +1,2 @@
 
-struct pqueue
-{
-	
-};
-
-
+struct pqueue {};

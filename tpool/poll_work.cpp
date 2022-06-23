@@ -14,12 +14,15 @@ namespace pool {
 void thread_pool::poll_work() {
 	std::unique_ptr<task> job;
 	while (true) {
+	// we came from the inner spin loop waiting for a job
+	continue_outer:;
 		{
 			std::unique_lock<std::mutex> l(lock);
 
 			while (!shutdown && jobs.empty()) {
 				std::this_thread::yield();
 				l.unlock();
+				// We need to try again and not just spinlock this thread
 				goto continue_outer;
 			}
 
@@ -34,10 +37,21 @@ void thread_pool::poll_work() {
 			jobs.pop_back();
 		}
 
-		// Do the job without holding any locks
-		job->print();
+		// Get the promise (an async value that will resolve sometime in the future)
+		auto prom = job->process(this->jobs).hndl;
+		// Make progress on resolving the value while we have not done so
+		while (!prom.done()) {
+			prom();
 
-		continue_outer:;
+			if (prom.done()) {
+				std::cout << "We got a: " << prom.promise().promise_value << std::endl;
+				break;
+			}
+			// TODO: Give this unfinished async task to the scheduler to somehow
+			// save it until the thing it's waiting on is ready (this will be info
+			// passed from the task to the scheduler)
+			else jobs.push_back(std::move(job));
+		}
 	}
 }
 

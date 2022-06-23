@@ -1,7 +1,7 @@
-#include "class.hpp"
-
 #include <cmath>
 #include <string>
+
+#include "class.hpp"
 
 namespace pool {
 std::string task::compute_color(double hue) {
