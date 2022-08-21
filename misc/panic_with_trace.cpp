@@ -1,6 +1,8 @@
 #include <execinfo.h>
 #include <string>
 
+#include "panic_with_trace.hpp"
+
 namespace pool {
 
 [[noreturn]] void panic_with_trace(std::string_view msg) {

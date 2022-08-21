@@ -1,13 +1,13 @@
 #pragma once
 
-#include "../utils.hpp"
-
 #include <concepts>
 #include <coroutine>
 #include <execinfo.h>
 #include <iostream>
 #include <liburing.h>
 #include <memory>
+
+#include "../utils.hpp"
 
 namespace pool {
 
@@ -24,7 +24,7 @@ struct sqe_await {
 		}
 	};
 
-	public:
+  public:
 	sqe_await(io_uring_sqe* sqe) noexcept : sqe(sqe) {}
 
 	auto operator co_await() {

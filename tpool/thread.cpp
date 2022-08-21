@@ -8,4 +8,3 @@
 
 // 		if (task->is_done())
 // 			delete (task);
-

@@ -1,7 +1,9 @@
-#include "class.hpp"
-
-#include <math.h>
+#include <cmath>
 #include <string>
+#include <iomanip>
+#include <sstream>
+
+#include "class.hpp"
 
 namespace pool {
 std::string task::compute_color(double hue) {
@@ -38,6 +40,8 @@ std::string task::compute_color(double hue) {
 		fprintf(stderr, "compute_color crashed work on errors people");
 	};
 
-	return str;
+	std::string res = str;
+	free(str);
+	return res;
 }
 }  // namespace pool

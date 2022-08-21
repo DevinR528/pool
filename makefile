@@ -11,7 +11,13 @@ CPPFLAGS += -I ./src
 
 CXXFLAGS += -Wall -Wextra -Werror
 CXXFLAGS += -std=c++2a
+
+ifneq (,$(findstring gcc,$(CC)))
 CXXFLAGS += -fconcepts
+else ifneq (,$(findstring clang,$(CC)))
+CXXFLAGS += -stdlib=libc++
+CXXFLAGS += -fcoroutines-ts
+endif
 
 ifeq ($(buildtype), release)
 CPPFLAGS += -D RELEASE
@@ -25,7 +31,7 @@ CPPFLAGS += -D DEBUGGING
 CXXFLAGS += -O0
 CXXFLAGS += -g
 CXXFLAGS += -Wno-unused-variable
-CXXFLAGS += -Wno-unused-but-set-variable
+# CXXFLAGS += -Wno-unused-but-set-variable
 CXXFLAGS += -Wno-unused-function
 CXXFLAGS += -Wno-unused-parameter
 endif
@@ -34,6 +40,7 @@ endif
 # LDLIBS += -luring
 LDLIBS += -lrt
 LDLIBS += -lpthread
+LDLIBS += -lm
 
 LDLIBS += -lstdc++
 
@@ -69,7 +76,7 @@ run: $(buildprefix)/pool
 
 valrun: $(buildprefix)/pool
 	# valgrind --gen-suppressions=yes --suppressions=./stl-val.supp --track-origins=yes --keep-debuginfo=yes $< $(ARGS)
-	valgrind --suppressions=./stl-val.supp --track-origins=yes --keep-debuginfo=yes $< $(ARGS)
+	valgrind --suppressions=./stl-val.supp --track-origins=yes --keep-debuginfo=yes  --leak-check=full $< $(ARGS)
 
 $(buildprefix)/pool: $(patsubst %.cpp,$(buildprefix)/%.o,$(srcs))
 	@ echo "linking $@"
@@ -88,7 +95,7 @@ $(buildprefix)/%.o $(buildprefix)/%.d: %.cpp | $(buildprefix)/%/
 # 	make -C $|/liburing-liburing-2.1 -j8
 
 format:
-	find -name '*.cpp' -o -name '*.hpp' | xargs -d \\n clang-format -i --verbose
+	find -name '*.cpp' -o -name '*.hpp' | xargs -d \\n clang-format-11 -i --verbose
 
 clean:
 	rm -rf build pool

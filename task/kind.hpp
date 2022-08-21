@@ -3,17 +3,29 @@
 namespace pool {
 
 enum task_kind {
-	tk_parse,
+	tk_parse = 0,
 
 	tk_typecheck,
 
-	tk_compile,
+	tk_lower,
 
 	tk_optimization,
 
 	tk_link,
 
-	tk_count,  // add above
+	tk_count,  // Number of variants
 };
+
+#ifdef DEBUGGING
+
+static const char* TASK_KIND_NAMES[] = {
+	"PARSE",
+	"TYPECHECK",
+	"LOWER",
+	"OPTIMIZATION",
+	"LINK",
+};
+
+#endif
 
 }  // namespace pool

@@ -6,14 +6,13 @@
 #include <string>
 #include <unistd.h>
 
-#include "cmdln/process.h"
 #include "cmdln/free.h"
-
+#include "cmdln/process.h"
+#include "misc/segv_backtrace.hpp"
 #include "pool/pool.hpp"
 #include "pqueue/pqueue.hpp"
 #include "task/task.hpp"
 #include "utils.hpp"
-#include "misc/segv_backtrace.hpp"
 
 pool::task::promise_type<bool>
 func_pointer(std::shared_ptr<pool::pqueue<pool::task, pool::task::less>> que) {
@@ -25,22 +24,21 @@ func_pointer(std::shared_ptr<pool::pqueue<pool::task, pool::task::less>> que) {
 }
 
 int main(int argc, char const* argv[]) {
-	#ifdef DEBUGGING
+#ifdef DEBUGGING
 	signal(SIGSEGV, segv_backtrace);
-	#endif
-	
+#endif
+
 	struct cmdln* flags = NULL;
-	
+
 	error = cmdln_process(&flags, argc, argv);
-	
-	if (!error)
-	{
+
+	if (!error) {
 		using prio_queue = pool::pqueue<pool::task, pool::task::less>;
-		
+
 		auto queue = std::make_shared<prio_queue>(prio_queue());
-		
+
 		pool::tpool thread_pool = pool::tpool(flags->number_of_threads, queue);
-		
+
 		auto aio_file_read =
 			[&](std::shared_ptr<prio_queue> que) -> pool::task::promise_type<bool> {
 			char* buff[128] = {};
@@ -54,13 +52,13 @@ int main(int argc, char const* argv[]) {
 			info.aio_offset = 0;
 			info.aio_sigevent.sigev_notify = SIGEV_SIGNAL;
 			aio_read(&info);
-			
+
 			int status = aio_error(&info);
 			while (status == EINPROGRESS) {
 				co_await std::suspend_always{};	 // let other threads make progress
 				status = aio_error(&info);
 			}
-			
+
 			if (status == ECANCELED) {
 				std::cout << "CANCELED in aio read" << std::endl;
 				co_return false;
@@ -92,22 +90,9 @@ int main(int argc, char const* argv[]) {
 		// __MUST__ push a task created with `pool::task(true)` as a signal to the thread it's done
 		// working!
 		thread_pool.spawn_tasks();
-		
 	}
-	
+
 	free_cmdln(flags);
-	
+
 	return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
