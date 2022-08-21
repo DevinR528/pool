@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "../class.hpp"
+#include "../../misc/result.hpp"
 #include "../kind.hpp"
 
 namespace pool {
@@ -22,7 +23,7 @@ class parse_task: public task {
 		return *this;
 	}
 
-	task::promise_type<pool_error> process(std::vector<std::unique_ptr<task>>&) override;
+	task::promise_type<result<bool, pool_error>> process(std::vector<std::unique_ptr<task>>&) override;
 
 	~parse_task() override;
 };

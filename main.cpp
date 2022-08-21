@@ -9,8 +9,6 @@
 // #include ""
 // #include ""
 
-void take_a_task(pool::parse_task t) { t.print(); }
-
 int nain(int argc, char const* argv[]) {
 	int error = 0;
 

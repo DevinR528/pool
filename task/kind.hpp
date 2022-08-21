@@ -13,7 +13,7 @@ enum task_kind {
 
 	tk_link,
 
-	tk_count,  // add above
+	tk_count,  // Number of variants
 };
 
 #ifdef DEBUGGING

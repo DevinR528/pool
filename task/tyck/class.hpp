@@ -7,6 +7,7 @@
 #include "../class.hpp"
 #include "../kind.hpp"
 #include "../../enums/error.hpp"
+#include "../../misc/result.hpp"
 
 namespace pool {
 class tyck_task: public task {
@@ -21,7 +22,7 @@ class tyck_task: public task {
 		return *this;
 	}
 
-	task::promise_type<pool_error> process(std::vector<std::unique_ptr<task>>&) override;
+	task::promise_type<result<bool, pool_error>> process(std::vector<std::unique_ptr<task>>&) override;
 
 	~tyck_task() override;
 };

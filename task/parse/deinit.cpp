@@ -5,6 +5,8 @@
 
 namespace pool {
 
-parse_task::~parse_task() {}
+parse_task::~parse_task() {
+	task::~task();
+}
 
 }  // namespace pool

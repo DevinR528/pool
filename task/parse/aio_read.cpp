@@ -1,17 +1,18 @@
 #include <aio.h>
+#include <coroutine>
+#include <iostream>
+#include <iterator>
 #include <memory>
 #include <string>
 #include <vector>
-#include <iostream>
-#include <coroutine>
-#include <iterator>
 
 #include "aio_read.hpp"
 #include "class.hpp"
 
 namespace pool {
 
-task::promise_type<pool_error> aio_file_read(std::vector<std::unique_ptr<task>>& que, std::string_view path) {
+task::promise_type<pool_error, std::string>
+aio_file_read(std::vector<std::unique_ptr<task>>& que, std::string_view path) {
 	char* buff[1024] = {};
 	FILE* fd = fopen(path.data(), "r");
 	if (fd == nullptr) { std::cout << "error: invalid file `" << path << "`\n"; }
@@ -36,21 +37,15 @@ task::promise_type<pool_error> aio_file_read(std::vector<std::unique_ptr<task>>&
 			continue;
 		}
 
-		std::cout << "read: " << amt_read << " " << curr << std::endl;
-
 		co_yield std::string(str, curr, amt_read);
-
-		std::cout << "read2: " << amt_read << " " << curr << std::endl;
 
 		curr = amt_read;
 		status = aio_error(&info);
 	}
-// flush the rest, or yield the last chunk
+	// flush the rest, or yield the last chunk
 	std::string_view str = (char*)info.aio_buf;
 	size_t amt_read = str.size();
 	co_yield std::string(str, curr, amt_read);
-	std::cout << "read3: " << amt_read << " " << curr << std::endl;
-
 
 	if (status == ECANCELED) {
 		std::cout << "CANCELED in aio read" << std::endl;
@@ -60,9 +55,7 @@ task::promise_type<pool_error> aio_file_read(std::vector<std::unique_ptr<task>>&
 		co_return pool_error::e_syscall_failed;
 	}
 
-	// std::cout << "SUCCESS: " << (char*)info.aio_buf << "\n";
-
 	co_return pool_error::e_success;
 };
 
-}
+}  // namespace pool

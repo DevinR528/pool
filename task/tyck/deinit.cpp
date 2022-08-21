@@ -5,6 +5,8 @@
 
 namespace pool {
 
-tyck_task::~tyck_task() {}
+tyck_task::~tyck_task() {
+	task::~task();
+}
 
 }  // namespace pool

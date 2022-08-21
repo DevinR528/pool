@@ -38,13 +38,14 @@ void thread_pool::poll_work() {
 		}
 
 		// Get the promise (an async value that will resolve sometime in the future)
-		auto prom = job->process(this->jobs).hndl;
+		auto prom = job->process(this->jobs).m_hndl;
 		// Make progress on resolving the value while we have not done so
 		while (!prom.done()) {
 			prom();
 
 			if (prom.done()) {
-				std::cout << "We got a: " << prom.promise().promise_value << std::endl;
+				std::cout << "We got a: " << prom.promise().m_promise_value << std::endl;
+				prom.destroy();
 				break;
 			}
 			// TODO: Give this unfinished async task to the scheduler to somehow

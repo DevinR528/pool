@@ -35,7 +35,7 @@ void tpool::run_tasks() {
 
 		auto task = std::move(opt_task.value());
 		// Get the promise (an async value that will resolve sometime in the future)
-		auto prom = task->call(this->queue).hndl;
+		auto prom = task->call(this->queue).m_hndl;
 
 		// Make progress on resolving the value while we have not done so
 		while (!prom.done()) {
@@ -44,9 +44,9 @@ void tpool::run_tasks() {
 			std::this_thread::yield();
 		}
 
-		std::cout << prom.promise().promise_value << std::endl;
+		std::cout << prom.promise().m_promise_value << std::endl;
 		// Now that we have resolved the promise value, use it
-		auto res = prom.promise().promise_value;
+		auto res = prom.promise().m_promise_value;
 
 		done = res ? ts_SUCCESS : ts_FAILED;
 
@@ -62,13 +62,13 @@ void tpool::run_tasks() {
 // 	if (!task.has_value()) { return false; }
 
 // 	// Get the promise (an async value that will resolve sometime in the future)
-// 	auto prom = task.value()->call(this->queue).hndl;
+// 	auto prom = task.value()->call(this->queue).m_hndl;
 
 // 	// Make progress on resolving the value while we have not done so
 // 	while (!prom.done()) { prom(); }
 
-// 	std::cout << prom.promise().promise_value << std::endl;
+// 	std::cout << prom.promise().m_promise_value << std::endl;
 // 	// Now that we have resolved the promise value, use it
-// 	return prom.promise().promise_value;
+// 	return prom.promise().m_promise_value;
 // }
 }  // namespace pool
